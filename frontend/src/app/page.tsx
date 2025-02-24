@@ -11,6 +11,7 @@ type Data = {
 
 export default function Home() {
   const [data, setData] = useState<Data[]>([]);
+  const [searchTerm, setSearchTerm] = useState(""); // Хайлт хийх үг
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,14 +27,27 @@ export default function Home() {
     fetchData();
   }, []);
 
+  // Хайлт хийх функц
+  const filteredData = data.filter((item) =>
+    item.number.includes(searchTerm) // Дугаараар шүүх
+  );
+
   return (
     <div className="flex justify-center items-center mt-48">
       <div className="flex flex-col gap-3">
-        <Input className="w-[300px] h-[30px] rounded-xl" />
+        {/* Хайлтын утга хадгалах Input */}
+        <Input
+          className="w-[300px] h-[30px] rounded-xl"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)} // Хайлт хийх үгийг өөрчлөх
+          placeholder="Дугаар оруулна уу"
+        />
         <Button className="w-[300px] h-[30px] rounded-xl bg-black text-white hover:bg-gray-700">
           Нэр, дугаараар хайх
         </Button>
-        {data.map((item) => (
+
+        {/* Хайлтын үр дүнг харуулах */}
+        {filteredData.map((item) => (
           <div key={item.id} className="space-x-4">
             <span>{item.number}</span>
             <span>{item.name}</span>
