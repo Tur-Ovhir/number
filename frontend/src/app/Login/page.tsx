@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
                 <Button className="font-bold hover:bg-blue-500 rounded-xl">
                     Нэвтрэх
                 </Button>
+                <Button className="font-bold hover:bg-blue-500 rounded-xl">
+                    Бүртгүүлэх
+                </Button>
             </div>
         </div>
     )

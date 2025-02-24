@@ -58,7 +58,7 @@ export default function AdminPage() {
           <ul className="list-disc pl-5 mt-2">
             {phoneNumbers.map((number, index) => (
               <li key={index} className="flex justify-between">
-                <span>{number}</span>
+                <span className="font-bold">{number}</span>
                 <div className="flex flex-row gap-3">
                   <Button 
                     className="mr-2 bg-yellow-200 ml-3 h-[30px]"
