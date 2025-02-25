@@ -47,7 +47,7 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         if (data[0].role !== "admin") {
-          router.push("/login");
+          router.push("/Login");
         }
       }
     };
@@ -130,11 +130,11 @@ export default function AdminPage() {
   return (
     <div className="flex justify-center items-center mt-[50px]">
       <div className="flex flex-col gap-3">
+        <h1 className="font-bold text-xl">Админ хэсэг</h1>
         <Link href="/Login">
           <h1 className="text-2xl text-green-500">Sign Out </h1>
         </Link>
 
-       
         <Input
           className="w-[300px] h-[30px] rounded-xl"
           placeholder="Хайх дугаараа оруулна уу!"
@@ -161,7 +161,8 @@ export default function AdminPage() {
           <ul className="list-disc pl-5 mt-2">
             {filteredData.map((number) => (
               <li key={number.id} className="flex justify-between">
-                <span className="font-bold">{number.number}</span>
+
+                <span className="font-bold">{number. number}</span>
                 <span className="font-bold">{number.name}</span>
                 <div className="flex flex-row gap-3">
                   <Button
