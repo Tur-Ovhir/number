@@ -1,4 +1,4 @@
-import { pgTable, serial, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 
 const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -9,6 +9,7 @@ const users = pgTable("users", {
 
 const numbers = pgTable("numbers", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
   number: text("number").notNull(),
   name: text("name").notNull(),
 });

@@ -21,40 +21,41 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch("http://localhost:4000/numbers", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-      setData(data);
-    };
-
     const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
+
+    if (token) {
+      fetchData();
+      fetchUser(token);
+    }else{
+      router.push("/Login");
     }
-
-    const fetchUser = async () => {
-      const response = await fetch(`http://localhost:4000/users/${token}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data[0].role !== "admin") {
-          router.push("/Login");
-        }
-      }
-    };
-
-    fetchData();
-    fetchUser();
   }, [router]);
+
+  const fetchData = async () => {
+    const response = await fetch("http://localhost:4000/numbers", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    setData(data);
+  };
+
+  const fetchUser = async (token:string) => {
+    const response = await fetch(`http://localhost:4000/users/${token}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data[0].role !== "admin") {
+        router.push("/Login");
+      }
+    }
+  };
 
   const handleAddOrEdit = async () => {
     if (editingIndex !== null) {
@@ -84,9 +85,11 @@ export default function AdminPage() {
     } else {
       
       try {
+    const token = localStorage.getItem("token");
+
         const response = await fetch("http://localhost:4000/numbers", {
           method: "POST",
-          body: JSON.stringify({ number: phoneNumber, name }),
+          body: JSON.stringify({ number: phoneNumber, name,userId:token }),
           headers: {
             "Content-Type": "application/json",
           },

@@ -2,8 +2,9 @@
 "use client"; 
 import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input"; 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";  
-import Link from "next/link";
+
 
 type Data = {   
   id: number;   
@@ -19,27 +20,36 @@ export default function Home() {
   const [editId, setEditId] = useState<number | null>(null);   
   const [editNumber, setEditNumber] = useState("");   
   const [editName, setEditName] = useState("");  
+  const router = useRouter();
 
+  useEffect(() => {    
+    const token = localStorage.getItem("token");
 
-  useEffect(() => {     
-    const fetchData = async () => {       
-      const response = await fetch("http://localhost:4000/numbers", {         
-        method: "GET",         
-        headers: {           
-          "Content-Type": "application/json",         
-        },       
-      });       
-      const data = await response.json();       
-      setData(data);     
-    };     
-    fetchData();   
+    if (token) {
+      fetchData(token);
+    }else{
+      router.push("/Login");
+    }
   }, []);    
+
+  const fetchData = async (userId:string) => {       
+    const response = await fetch(`http://localhost:4000/numbers/user/${userId}`, {         
+      method: "GET",         
+      headers: {           
+        "Content-Type": "application/json",         
+      },       
+    });       
+    const data = await response.json();       
+    setData(data);     
+  };  
 
   const filteredData = data.filter((item) => item.number && item.name.includes(searchTerm));
 
-  const handleAdd = async () => {     
-    if (newNumber && newName) {       
-      const newData = { number: newNumber, name: newName };       
+  const handleAdd = async () => {
+    const token =localStorage.getItem("token")
+
+    if (newNumber && newName && token) {       
+      const newData = { number: newNumber, name: newName,userId:token };       
       const response = await fetch("http://localhost:4000/numbers", {         
         method: "POST",         
         headers: {           

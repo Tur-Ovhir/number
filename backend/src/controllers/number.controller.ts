@@ -4,8 +4,8 @@ import { numbers } from "../database/schema";
 import { eq } from "drizzle-orm";
 
 export const createNumber: RequestHandler = async (req, res) => {
-  const { number, name } = req.body;
-  const newNumber = await db.insert(numbers).values({ number, name });
+  const { number, name, userId } = req.body;
+  const newNumber = await db.insert(numbers).values({ number, name, userId });
   res.status(201).json(newNumber);
 };
 
@@ -20,6 +20,15 @@ export const getNumber: RequestHandler = async (req, res) => {
     .select()
     .from(numbers)
     .where(eq(numbers.id, parseInt(id)));
+  res.status(200).json(number);
+};
+
+export const getNumberWithUserId: RequestHandler = async (req, res) => {
+  const { id } = req.params;
+  const number = await db
+    .select()
+    .from(numbers)
+    .where(eq(numbers.userId, parseInt(id)));
   res.status(200).json(number);
 };
 
