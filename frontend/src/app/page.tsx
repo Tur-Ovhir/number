@@ -27,11 +27,12 @@ export default function Home() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    if (token) {
+    if (!token || token == "undefined") {
+      localStorage.removeItem("token");
+      router.push("/login");
+    } else {
       fetchData(token);
       fetchUser(token);
-    } else {
-      router.push("/login");
     }
   }, []);
 
@@ -205,7 +206,7 @@ export default function Home() {
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Хайх"
         />
-        <ul>
+        <ul className="space-y-2">
           {filteredData.map((item) => (
             <li
               key={item.id}

@@ -5,37 +5,30 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-const Login = () => {
+const Register = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     try {
-      const response = await fetch("http://localhost:4000/users/login", {
+      await fetch("http://localhost:4000/users/register", {
         method: "POST",
         body: JSON.stringify({ name, password }),
         headers: {
           "Content-Type": "application/json",
         },
       });
-      const data = await response.json();
-      if (data[0]?.role === "admin") {
-        localStorage.setItem("token", data[0].id);
-        router.push("/admin");
-      } else {
-        localStorage.setItem("token", data[0]?.id);
-        router.push("/");
-      }
-    } catch (err) {
-      console.error("Fetch алдаа:", err);
+      router.push("/login");
+    } catch (error) {
+      console.error(error);
     }
   };
 
   return (
     <div className="flex justify-center items-center">
       <div className="w-[300px] h-[350px] border flex justify-center items-center flex-col gap-3 mt-40 rounded-xl p-4">
-        <h1 className="font-bold text-xl">Нэвтрэх</h1>
+        <h1 className="font-bold text-xl">Бүртгүүлэх</h1>
         <Input
           className="rounded-xl"
           placeholder="Username"
@@ -51,15 +44,15 @@ const Login = () => {
         />
         <Button
           className="font-bold hover:bg-white bg-blue-500 rounded-xl"
-          onClick={handleLogin}
+          onClick={handleRegister}
         >
-          Нэвтрэх
+          Бүртгүүлэх
         </Button>
-        <Link href="/register">
-          <p className="text-gray-600 text-sm">Бүртгүүлэх</p>
+        <Link href="/login">
+          <p className="text-gray-600 text-sm">Нэвтрэх</p>
         </Link>
       </div>
     </div>
   );
 };
-export default Login;
+export default Register;
