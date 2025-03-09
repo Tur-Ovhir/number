@@ -30,7 +30,8 @@ export default function AdminPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
+    if (!token || token == "undefined") {
+      localStorage.removeItem("token");
       router.push("/login");
     } else {
       fetchData();
