@@ -9,7 +9,10 @@ const users = pgTable("users", {
 
 const numbers = pgTable("numbers", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  userName: text("user_name").notNull(),
   number: text("number").notNull(),
   name: text("name").notNull(),
 });

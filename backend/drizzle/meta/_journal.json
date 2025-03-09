@@ -15,6 +15,13 @@
       "when": 1741330929160,
       "tag": "0001_zippy_quentin_quire",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1741534904592,
+      "tag": "0002_neat_bloodstrike",
+      "breakpoints": true
     }
   ]
 }
