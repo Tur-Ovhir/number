@@ -1,11 +1,22 @@
 import { RequestHandler } from "express";
 import db from "../database";
-import { numbers } from "../database/schema";
+import { numbers, users } from "../database/schema";
 import { eq } from "drizzle-orm";
 
 export const createNumber: RequestHandler = async (req, res) => {
   const { number, name, userId } = req.body;
-  const newNumber = await db.insert(numbers).values({ number, name, userId });
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+
+  if (!user) {
+    res.status(400).json({ message: "User not found" });
+    return;
+  }
+
+  const newNumber = await db
+    .insert(numbers)
+    .values({ number, name, userId, userName: user.name });
   res.status(201).json(newNumber);
 };
 

@@ -1,15 +1,22 @@
-
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
 
 type Data = {
   id: number;
   number: string;
   name: string;
+  userId: number;
+  userName: string;
 };
 
 export default function AdminPage() {
@@ -17,90 +24,131 @@ export default function AdminPage() {
   const [name, setName] = useState("");
   const [data, setData] = useState<Data[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [userNames, setUserNames] = useState<{ [key: number]: string }>({});
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
-    if (token) {
+    if (!token) {
+      router.push("/login");
+    } else {
       fetchData();
       fetchUser(token);
-    }else{
-      router.push("/Login");
     }
   }, [router]);
 
-  const fetchData = async () => {
-    const response = await fetch("http://localhost:4000/numbers", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await response.json();
-    setData(data);
-  };
+  useEffect(() => {
+    fetchAllUserNames();
+  }, [data]);
 
-  const fetchUser = async (token:string) => {
-    const response = await fetch(`http://localhost:4000/users/${token}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      if (data[0].role !== "admin") {
-        router.push("/Login");
+  const fetchData = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/numbers");
+      if (response.ok) {
+        const numbers = await response.json();
+        setData(numbers);
       }
+    } catch (error) {
+      console.error("Fetch алдаа:", error);
     }
   };
 
+  const fetchUser = async (token: string) => {
+    try {
+      const response = await fetch(`http://localhost:4000/users/${token}`);
+      if (response.ok) {
+        const user = await response.json();
+        if (user[0]?.role !== "admin") {
+          router.push("/login");
+        }
+      }
+    } catch (error) {
+      console.error("User fetch алдаа:", error);
+    }
+  };
+
+  const fetchAllUserNames = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const uniqueUserIds = Array.from(new Set(data.map((item) => item.userId)));
+    const userMap: { [key: number]: string } = {};
+
+    await Promise.all(
+      uniqueUserIds.map(async (userId) => {
+        try {
+          const response = await fetch(`http://localhost:4000/users/${userId}`);
+          if (response.ok) {
+            const user = await response.json();
+            userMap[userId] = user[0]?.name || "Unknown";
+          }
+        } catch (error) {
+          console.error("User fetch алдаа:", error);
+        }
+      })
+    );
+
+    setUserNames(userMap);
+  };
+
+  const groupedData = useMemo(() => {
+    return data.reduce((acc, item) => {
+      if (!acc[item.userId]) acc[item.userId] = [];
+      acc[item.userId].push(item);
+      return acc;
+    }, {} as Record<number, Data[]>);
+  }, [data]);
+
   const handleAddOrEdit = async () => {
     if (editingIndex !== null) {
-     
       try {
-        const response = await fetch(`http://localhost:4000/numbers/${editingIndex}`, {
-          method: "PUT",
-          body: JSON.stringify({ number: phoneNumber, name }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `http://localhost:4000/numbers/${editingIndex}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({ number: phoneNumber, name }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         if (response.ok) {
-          const updatedData = data.map((item) =>
-            item.id === editingIndex ? { ...item, number: phoneNumber, name } : item
+          setData((prevData) =>
+            prevData.map((item) =>
+              item.id === editingIndex
+                ? { ...item, number: phoneNumber, name }
+                : item
+            )
           );
-          setData(updatedData);
           setPhoneNumber("");
           setName("");
           setEditingIndex(null);
-        } else {
-          console.error("Алдаа:", response.statusText);
         }
       } catch (error) {
         console.error("Fetch алдаа:", error);
       }
     } else {
-      
+      const token = localStorage.getItem("token");
       try {
-    const token = localStorage.getItem("token");
-
         const response = await fetch("http://localhost:4000/numbers", {
           method: "POST",
-          body: JSON.stringify({ number: phoneNumber, name,userId:token }),
+          body: JSON.stringify({ number: phoneNumber, name, userId: token }),
           headers: {
             "Content-Type": "application/json",
           },
         });
         if (response.ok) {
+          const newNumber = {
+            id: data.length + 1,
+            number: phoneNumber,
+            name,
+            userId: parseInt(token || "1"),
+            userName: "user",
+          };
+          setData((prevData) => [...prevData, newNumber]);
           setPhoneNumber("");
           setName("");
-          const newNumber = { id: data.length + 1, number: phoneNumber, name };
-          setData([...data, newNumber]);
-        } else {
-          console.error("Алдаа:", response.statusText);
         }
       } catch (error) {
         console.error("Fetch алдаа:", error);
@@ -118,73 +166,144 @@ export default function AdminPage() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    await fetch(`http://localhost:4000/numbers/${id}`, {
-      method: "DELETE",
-    });
-    const updatedNumbers = data.filter((number) => number.id !== id);
-    setData(updatedNumbers);
+    try {
+      const response = await fetch(`http://localhost:4000/numbers/${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setData((prevData) => prevData.filter((item) => item.id !== id));
+      }
+    } catch (error) {
+      console.error("Fetch алдаа:", error);
+    }
   };
 
-  const filteredData = data.filter(
-    (item) =>
-      item.number.includes(searchQuery) || item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredData = useMemo(() => {
+    return data.filter(
+      (item) =>
+        item.number.includes(searchQuery) ||
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [data, searchQuery]);
 
+  const logOut = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
   return (
-    <div className="flex justify-center items-center mt-[50px]">
+    <div className="flex justify-center mt-[50px] gap-4">
       <div className="flex flex-col gap-3">
-        <h1 className="font-bold text-xl">Админ хэсэг</h1>
-        <Link href="/Login">
-          <h1 className="text-2xl text-green-500">Sign Out </h1>
-        </Link>
-
+        <div className="flex">
+          <h1 className="font-bold text-xl w-[300px]">Админ хэсэг</h1>
+          <button onClick={logOut} className="text-rose-500">
+            Log out
+          </button>
+        </div>
         <Input
-          className="w-[300px] h-[30px] rounded-xl"
-          placeholder="Хайх дугаараа оруулна уу!"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-
-       
-        <Input
-          className="w-[300px] h-[30px] rounded-xl"
+          className="w-full h-[30px] rounded-xl"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
           placeholder="Нэмэх дугаараа оруулна уу!"
         />
+        <Input
+          className="w-full h-[30px] rounded-xl"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Нэрээ оруулна уу!"
+        />
         <Button
-          className="w-[300px] h-[30px] rounded-xl hover:bg-blue-500"
+          className="w-full h-[30px] rounded-xl hover:bg-white bg-blue-500"
           onClick={handleAddOrEdit}
         >
           <h3>{editingIndex !== null ? "Засах" : "Дугаар нэмэх"}</h3>
         </Button>
 
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">Нэмэгдсэн дугаарууд:</h3>
-          <ul className="list-disc pl-5 mt-2">
-            {filteredData.map((number) => (
-              <li key={number.id} className="flex justify-between">
-
-                <span className="font-bold">{number. number}</span>
-                <span className="font-bold">{number.name}</span>
+        <Input
+          className="w-full h-[30px] rounded-xl"
+          placeholder="Хайх дугаараа оруулна уу!"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <div className="max-h-96 overflow-y-scroll">
+          <ul className="space-y-2">
+            {filteredData.map((item) => (
+              <li
+                key={item.id}
+                className="flex justify-between p-2 border rounded-xl"
+              >
+                <div>
+                  <p>
+                    <strong>Нэр:</strong> {item.name}
+                  </p>
+                  <p>
+                    <strong>Дугаар:</strong> {item.number}
+                  </p>
+                  <p>
+                    <strong>Хэрэглэгч:</strong> {item.userName}
+                  </p>
+                </div>
                 <div className="flex flex-row gap-3">
                   <Button
-                    className="mr-2 bg-yellow-200 ml-3 h-[30px]"
-                    onClick={() => handleEditClick(number.id)}
+                    className="bg-yellow-200 rounded-xl"
+                    onClick={() => handleEditClick(item.id)}
                   >
-                    Засах
+                    <Pencil />
                   </Button>
                   <Button
-                    className="mr-2 bg-red-400 h-[30px]"
-                    onClick={() => handleDeleteClick(number.id)}
+                    className="bg-red-400 rounded-xl"
+                    onClick={() => handleDeleteClick(item.id)}
                   >
-                    Устгах
+                    <Trash2 />
                   </Button>
                 </div>
               </li>
             ))}
           </ul>
         </div>
+      </div>
+      <div className="w-[300px]">
+        <Accordion type="multiple" className="w-full">
+          {Object.entries(groupedData).map(([userId, items]) => (
+            <AccordionItem key={userId} value={userId}>
+              <AccordionTrigger>
+                Хэрэглэгч: {userNames[parseInt(userId)] || "Loading..."}
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="space-y-2">
+                  {items.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex justify-between p-2 border rounded-xl"
+                    >
+                      <div>
+                        <p>
+                          <strong>Нэр:</strong> {item.name}
+                        </p>
+                        <p>
+                          <strong>Дугаар:</strong> {item.number}
+                        </p>
+                      </div>
+                      <div className="flex flex-row gap-3">
+                        <Button
+                          className="bg-yellow-200 rounded-xl"
+                          onClick={() => handleEditClick(item.id)}
+                        >
+                          <Pencil />
+                        </Button>
+                        <Button
+                          className="bg-red-400 rounded-xl"
+                          onClick={() => handleDeleteClick(item.id)}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
     </div>
   );

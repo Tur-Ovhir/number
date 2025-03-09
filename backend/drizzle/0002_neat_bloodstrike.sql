@@ -1,0 +1,1 @@
+ALTER TABLE "numbers" ADD COLUMN "user_name" text NOT NULL;
