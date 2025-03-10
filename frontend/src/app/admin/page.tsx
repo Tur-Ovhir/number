@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -10,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
-
+import { FaRegSmileBeam } from "react-icons/fa";
+import Link from "next/link";
 type Data = {
   id: number;
   number: string;
@@ -26,6 +28,7 @@ export default function AdminPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [userNames, setUserNames] = useState<{ [key: number]: string }>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUserSectionVisible, setIsUserSectionVisible] = useState(false); 
   const router = useRouter();
 
   useEffect(() => {
@@ -191,46 +194,46 @@ export default function AdminPage() {
     localStorage.removeItem("token");
     router.push("/login");
   };
+
   return (
-    <div className="flex justify-center mt-[50px] gap-4">
-      <div className="flex flex-col gap-3">
-        <div className="flex">
-          <h1 className="font-bold text-xl w-[300px]">Админ хэсэг</h1>
-          <button onClick={logOut} className="text-rose-500">
-            Log out
-          </button>
-        </div>
+    <div className="flex flex-col items-center mt-[50px] gap-6 max-w-screen-lg mx-auto p-4">
+      <h1 className="font-bold text-3xl flex items-center gap-2 text-green-400">
+        Админ хэсэг <FaRegSmileBeam className="text-yellow-500 w-[30px] h-[30px]" />
+      </h1>
+
+      <div className="flex flex-col gap-4 w-full max-w-lg">
         <Input
-          className="w-full h-[30px] rounded-xl"
+          className="p-3 rounded-xl border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
           placeholder="Нэмэх дугаараа оруулна уу!"
         />
         <Input
-          className="w-full h-[30px] rounded-xl"
+          className="p-3 rounded-xl border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Нэрээ оруулна уу!"
         />
         <Button
-          className="w-full h-[30px] rounded-xl hover:bg-white bg-blue-500"
+          className="p-3 bg-green-500 text-white rounded-xl hover:bg-green-400 transition"
           onClick={handleAddOrEdit}
         >
-          <h3>{editingIndex !== null ? "Засах" : "Дугаар нэмэх"}</h3>
+          {editingIndex !== null ? "Засах" : "Дугаар нэмэх"}
         </Button>
 
         <Input
-          className="w-full h-[30px] rounded-xl"
+          className="p-3 rounded-xl border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Хайх дугаараа оруулна уу!"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <div className="max-h-96 overflow-y-scroll">
-          <ul className="space-y-2">
+
+        <div className="max-h-96 overflow-y-auto mt-4">
+          <ul className="space-y-4">
             {filteredData.map((item) => (
               <li
                 key={item.id}
-                className="flex justify-between p-2 border rounded-xl"
+                className="flex justify-between p-4 border rounded-xl shadow-lg hover:shadow-xl transition"
               >
                 <div>
                   <p>
@@ -243,15 +246,15 @@ export default function AdminPage() {
                     <strong>Хэрэглэгч:</strong> {item.userName}
                   </p>
                 </div>
-                <div className="flex flex-row gap-3">
+                <div className="flex gap-3">
                   <Button
-                    className="bg-yellow-200 rounded-xl"
+                    className="bg-yellow-200 rounded-xl p-2 hover:bg-yellow-300 transition"
                     onClick={() => handleEditClick(item.id)}
                   >
                     <Pencil />
                   </Button>
                   <Button
-                    className="bg-red-400 rounded-xl"
+                    className="bg-red-400 rounded-xl p-2 hover:bg-red-500 transition"
                     onClick={() => handleDeleteClick(item.id)}
                   >
                     <Trash2 />
@@ -261,50 +264,66 @@ export default function AdminPage() {
             ))}
           </ul>
         </div>
+        
+        <button
+          onClick={logOut}
+          className="mt-4 p-3 w-full bg-green-500 text-white rounded-xl hover:bg-green-400 transition"
+        >
+          Log out
+        </button>
       </div>
-      <div className="w-[300px]">
-        <Accordion type="multiple" className="w-full">
-          {Object.entries(groupedData).map(([userId, items]) => (
-            <AccordionItem key={userId} value={userId}>
-              <AccordionTrigger>
-                Хэрэглэгч: {userNames[parseInt(userId)] || "Loading..."}
-              </AccordionTrigger>
-              <AccordionContent>
-                <ul className="space-y-2">
-                  {items.map((item) => (
-                    <li
-                      key={item.id}
-                      className="flex justify-between p-2 border rounded-xl"
-                    >
-                      <div>
-                        <p>
-                          <strong>Нэр:</strong> {item.name}
-                        </p>
-                        <p>
-                          <strong>Дугаар:</strong> {item.number}
-                        </p>
-                      </div>
-                      <div className="flex flex-row gap-3">
-                        <Button
-                          className="bg-yellow-200 rounded-xl"
-                          onClick={() => handleEditClick(item.id)}
-                        >
-                          <Pencil />
-                        </Button>
-                        <Button
-                          className="bg-red-400 rounded-xl"
-                          onClick={() => handleDeleteClick(item.id)}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+
+      <div className="w-full max-w-md ">
+        <Link href="/User">
+        <Button
+          onClick={() => setIsUserSectionVisible((prev) => !prev)}
+          className="p-3 w-full bg-yellow-400 text-white rounded-xl hover:bg-green-600 transition mb-4"
+        >
+          {isUserSectionVisible ? "Хэрэглэгчдийг нуух" : "Хэрэглэгчдийг харуулах"}
+        </Button>
+        </Link>
+
+        {isUserSectionVisible && (
+          <Accordion type="multiple" className="w-full">
+            {Object.entries(groupedData).map(([userId, items]) => (
+              <AccordionItem key={userId} value={userId}>
+                <AccordionTrigger>
+                  Хэрэглэгч: {userNames[parseInt(userId)] || "Loading..."}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ul className="space-y-2 p-4">
+                    {items.map((item) => (
+                      <li key={item.id} className="flex justify-between p-3 border rounded-xl shadow-md hover:shadow-lg transition">
+                        <div>
+                          <p>
+                            <strong>Нэр:</strong> {item.name}
+                          </p>
+                          <p>
+                            <strong>Дугаар:</strong> {item.number}
+                          </p>
+                        </div>
+                        <div className="flex gap-3">
+                          <Button
+                            className="bg-yellow-200 rounded-xl p-2 hover:bg-yellow-300 transition"
+                            onClick={() => handleEditClick(item.id)}
+                          >
+                            <Pencil />
+                          </Button>
+                          <Button
+                            className="bg-red-400 rounded-xl p-2 hover:bg-red-500 transition"
+                            onClick={() => handleDeleteClick(item.id)}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )}
       </div>
     </div>
   );
